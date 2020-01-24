@@ -34,12 +34,12 @@ class Navbarheader extends Component{
                   <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="mr-auto">
                       <Nav.Link href="/dashboard">Home</Nav.Link>
-                      <NavDropdown title="Vendor" id="basic-nav-dropdown">
+                      <NavDropdown title="Admin" id="basic-nav-dropdown">
                         <NavDropdown.Item href="/vendorlist">Vendor Managment</NavDropdown.Item>
-                      </NavDropdown>
-                      <NavDropdown title="User" id="basic-nav-dropdown">
                         <NavDropdown.Item href="/userlist">User Managment</NavDropdown.Item>
+                        <NavDropdown.Item href="/companylist">Company Managment</NavDropdown.Item>
                       </NavDropdown>
+                     
                     </Nav>
                     <Nav className="navbar-text">
                       <NavDropdown title={userfullname} id="basic-nav-dropdown">

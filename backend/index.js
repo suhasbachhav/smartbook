@@ -97,14 +97,14 @@ app.post('/editUser', function(req,res){
 })
 
 app.post('/editVendor', function(req,res){
-    //var body = req.body;
-    var sqlQuery = 'UPDATE `vendor` SET `vendorName` = ? , `GSTIN` = ? ,  `exp_type` = ? ,  `vendorstatus` = ?  WHERE `vendor`.`vid` = ?';
-        
-    pool.query(sqlQuery,[req.body.vendorName, req.body.vendorGSTIN, req.body.vendorExpenseType, req.body.vendorstatus, req.body.vendorId ] , (err, result) => {
+    var d = new Date();
+    var currDateTime = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+    var sqlQuery = 'UPDATE `vendor` SET `vendorName` = ? , `GSTIN` = ? ,  `exp_type` = ? ,  `vendorstatus` = ? ,  `createdBy` = ?, `updatedOn` = ?  WHERE `vendor`.`vid` = ?';
+    pool.query(sqlQuery,[req.body.vendorName, req.body.vendorGSTIN, req.body.vendorExpenseType, req.body.vendorstatus, req.body.logId, currDateTime , req.body.vendorId ] , (err, result) => {
     if (err){
       res.status(400).send("Error in Connection");
     }else {
-        pool.query('SELECT * FROM vendor', (err, resultNew) => {
+        pool.query('SELECT vendor.*,users.name AS CreatedUser FROM vendor JOIN users ON users.id=vendor.createdBy', (err, resultNew) => {
             res.writeHead(200,{
                 'Content-Type' : 'text/plain'
             })
@@ -115,12 +115,14 @@ app.post('/editVendor', function(req,res){
 })
 
 app.post('/addVendor', function(req,res){
-    var sqlQuery = 'INSERT INTO vendor (vendorName , GSTIN , exp_type , vendorstatus) VALUES (?,?,?,?)';
-    pool.query(sqlQuery,[req.body.vendorName, req.body.vendorGSTIN, req.body.vendorExpenseType, req.body.vendorstatus] , (err, result) => {
+    var d = new Date();
+    var currDateTime = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+    var sqlQuery = 'INSERT INTO vendor (vendorName , GSTIN , exp_type , vendorstatus , createdBy, updatedOn) VALUES (?,?,?,?,?,?)';
+    pool.query(sqlQuery,[req.body.vendorName, req.body.vendorGSTIN, req.body.vendorExpenseType, req.body.vendorstatus , req.body.logId, currDateTime] , (err, result) => {
     if (err){
       res.status(400).send("Error in Connection");
     }else {
-        pool.query('SELECT * FROM vendor', (err, resultNew) => {
+        pool.query('SELECT vendor.*,users.name AS CreatedUser FROM vendor JOIN users ON users.id=vendor.createdBy', (err, resultNew) => {
             res.writeHead(200,{
                 'Content-Type' : 'text/plain'
             })
@@ -146,8 +148,55 @@ app.post('/addUser', function(req,res){
   })
 })
 
+app.post('/addCompany', function(req,res){
+    var d = new Date();
+    var currDateTime = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+    var sqlQuery = 'INSERT INTO company (comp_name , address , status , createdBy , updatedOn) VALUES (?,?,?,?,?)';
+    pool.query(sqlQuery,[req.body.compName, req.body.compAdd, req.body.compstatus , req.body.logId ,currDateTime ] , (err, result) => {
+    if (err){
+      res.status(400).send("Error in Connection");
+    }else {
+        pool.query('SELECT company.*,users.name AS CreatedUser FROM company JOIN users ON users.id=company.createdBy', (err, resultNew) => {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(resultNew));
+        })
+    }
+  })
+})
+app.post('/editCompany', function(req,res){
+    var d = new Date();
+    var currDateTime = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+    var sqlQuery = 'UPDATE `company` SET `comp_name` = ? , `address` = ? ,  `status` = ? ,  `createdBy` = ? , `updatedOn` = ?  WHERE `company`.`compID` = ?';
+    pool.query(sqlQuery,[req.body.compName, req.body.compAdd, req.body.compStatus, req.body.logId, currDateTime,  req.body.compId] , (err, result) => {
+    if (err){
+      res.status(400).send("Error in Connection");
+    }else {
+        pool.query('SELECT company.*,users.name AS CreatedUser FROM company JOIN users ON users.id=company.createdBy', (err, resultNew) => {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(resultNew));
+        })
+    }
+  })
+})
+
 app.get('/vendorlist', function(req,res){
-    pool.query('SELECT * FROM vendor', (err, result) => {
+    pool.query('SELECT vendor.*,users.name AS CreatedUser FROM vendor JOIN users ON users.id=vendor.createdBy', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+app.get('/companylist', function(req,res){
+    pool.query('SELECT company.*,users.name AS CreatedUser FROM company JOIN users ON users.id=company.createdBy', (err, result) => {
         if (err){
           res.status(400).send("Error in Connection");
         }else {

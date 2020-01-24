@@ -68,7 +68,8 @@ class Vendorlist extends Component {
                 vendorGSTIN:$("#editVendorGSTIN-"+editVendorID).val(),
                 vendorstatus:veditStatus,
                 vendorExpenseType:$("#editVendorExpenseType-"+editVendorID).val(),
-                vendorId:$("#editVendorId-"+editVendorID).val()
+                vendorId:$("#editVendorId-"+editVendorID).val(),
+                logId:cookie.load('uid')
             }
             e.preventDefault();
            
@@ -91,7 +92,6 @@ class Vendorlist extends Component {
             .catch(error => {
                 console.log("In error");
                 console.log(error);
-                alert("Deleting User Unsuccessful :(");
             })
         }
     }
@@ -121,6 +121,7 @@ class Vendorlist extends Component {
                 vendorGSTIN:$("#addVendorGSTIN").val(),
                 vendorstatus:addStatus,
                 vendorExpenseType:$("#addVendorExpenseType").val(),
+                logId:cookie.load('uid')
             }
             e.preventDefault();
            
@@ -164,6 +165,8 @@ class Vendorlist extends Component {
                     <td style={{outline: "thin solid"}}>{vendorlist.GSTIN}</td>
                     <td style={{outline: "thin solid"}}>{vendorlist.exp_type}</td>
                     <td style={{outline: "thin solid"}}>{vendorlist.vendorstatus}</td>
+                    <td style={{outline: "thin solid"}}>{vendorlist.updatedOn}</td>
+                    <td style={{outline: "thin solid"}}>{vendorlist.CreatedUser}</td>
                     <td style={{outline: "thin solid"}}>
                         <Popup trigger={<button style={{margin: "2px"}} className="button btn btn-warning"> Edit </button>}  modal  closeOnDocumentClick >
                             <span> 
@@ -253,6 +256,8 @@ class Vendorlist extends Component {
                                 <th bgcolor="grey">GSTIN</th>
                                 <th bgcolor="grey">Expense Type</th>
                                 <th bgcolor="grey">Vendor Status</th>
+                                <th bgcolor="grey">Vendor last Update Time</th>
+                                <th bgcolor="grey">Vendor Updated By</th>
                                 <th bgcolor="grey">Update Vendor</th>
                             </tr>
                         </thead>

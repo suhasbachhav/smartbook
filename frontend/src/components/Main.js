@@ -4,6 +4,7 @@ import Login from './Login';
 import VendorList from './Vendorlist';
 import UserList from './Userlist';
 import Dashboard from './Dashboard';
+import Companylist from './Companylist';
 //Create a Main Component
 class Main extends Component {
     render(){
@@ -14,6 +15,7 @@ class Main extends Component {
                 <Route path="/Dashboard" component={Dashboard}/>
                 <Route path="/Vendorlist" component={VendorList}/>
                 <Route path="/Userlist" component={UserList}/>
+                <Route path="/Companylist" component={Companylist}/>
             </div>
         )
     }
