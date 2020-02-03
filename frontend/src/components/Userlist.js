@@ -322,8 +322,8 @@ class Userlist extends Component {
                                     <div className="form-group">
                                         <label>Vendor Status</label>
                                         <br/>
-                                        <input type="radio" value="Active" id="addUserStatus1" className="addUserStatus" name="addUserStatus1" defaultChecked="1" /> Active
-                                        <input type="radio" value="In-Active" id="addUserStatus0" className="addUserStatus"  name="addUserStatus0" /> In-Active
+                                        <input type="radio" value="Active" id="addUserStatus1" name="addUserStatus" defaultChecked="1" /> Active
+                                        <input type="radio" value="In-Active" id="addUserStatus0" name="addUserStatus" /> In-Active
                                     </div>
                                     <button onClick={(e) => this.addUser(e)} type="submit" className="btn btn-lg btn-success" style={{position: 'relative'}}>Update</button> 
                                 </div>

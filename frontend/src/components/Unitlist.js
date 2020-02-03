@@ -6,15 +6,18 @@ import {Redirect} from 'react-router';
 import Navbarheader from './Navbarheader';
 import Popup from "reactjs-popup";
 
-class Companylist extends Component {
+class Unitlist extends Component {
     constructor(){
         super();
-        this.state = { companylist : [] }
-        this.updateCompany = this.updateCompany.bind(this);
-        this.addCompany = this.addCompany.bind(this);
+        this.state = { 
+            unitlist : [],
+            companylist :[] 
+        }
+        this.updateUnit = this.updateUnit.bind(this);
+        this.addUnit = this.addUnit.bind(this);
     }
     componentDidMount(){
-        axios.get('http://localhost:5001/companylist')
+        axios.get('http://localhost:5001/unitlist')
             .then((response) => {
             response.data.map((val, i) => {     
                 if(val.status)
@@ -23,6 +26,12 @@ class Companylist extends Component {
                     response.data[i].status = "In-Active"
             })
             this.setState({
+                unitlist : this.state.unitlist.concat(response.data) 
+            })
+        })
+        axios.get('http://localhost:5001/companylist')
+            .then((response) => {
+            this.setState({
                 companylist : this.state.companylist.concat(response.data) 
             })
         })
@@ -30,11 +39,11 @@ class Companylist extends Component {
     state = { show: false };
 
     showModal = () => {
-    this.setState({ show: true });
+        this.setState({ show: true });
     };
 
     hideModal = () => {
-    this.setState({ show: false });
+        this.setState({ show: false });
     };
 
     logout = () => {
@@ -42,41 +51,38 @@ class Companylist extends Component {
         console.log("Cookie removed!")
         window.location = "/"
     }
-    handleValidation(editCompID){
+    handleValidation(editUnitID){
         let formIsValid = true;
-        if($("#editCompName-"+editCompID).val() ==''){
+        if($("#editUnitNumber-"+editUnitID).val() ==''){
            formIsValid = false;
-           alert("Company name Required");
-        }
-        if($("#editCompAdd-"+editCompID).val() ==''){
-           formIsValid = false;
-           alert("Company address Required");
+           alert("Unit Number Required");
         }
         return formIsValid;
     }
-    updateCompany = (e, editCompID) => {
+    updateUnit = (e, editUnitID) => {
         let redirectVar = null;
         if(!cookie.load('cookie')){
             return redirectVar = <Redirect to= "/" />
         }
-        if(this.handleValidation(editCompID)){
-            var compEditStatus = 0; 
-            if($("#editCompStatus1-"+editCompID).is(':checked'))    compEditStatus =1;
+        if(this.handleValidation(editUnitID)){
+            var unitEditStatus = 0; 
+            if($("#editUnitStatus1-"+editUnitID).is(':checked'))    unitEditStatus =1;
              
             const paramdata ={
-                compName:$("#editCompName-"+editCompID).val(),
-                compAdd:$("#editCompAdd-"+editCompID).val(),
-                compStatus:compEditStatus,
-                compId:editCompID,
+                unitId:$("#editUnitId-"+editUnitID).val(),
+                unitNumber:$("#editUnitNumber-"+editUnitID).val(),
+                unitCompany:$("#editUnitCompany-"+editUnitID).val(),
+                unitStatus:unitEditStatus,
                 logId:cookie.load('uid')
             }
+
             e.preventDefault();
            
             axios.defaults.withCredentials = true;
-            axios.post('http://localhost:5001/editCompany',paramdata)
+            axios.post('http://localhost:5001/editUnit',paramdata)
             .then(response => {
                 if(response.status === 200){
-                    this.setState({companylist: []});
+                    this.setState({unitlist: []});
                     response.data.map((val, i) => {     
                         if(val.status)
                             response.data[i].status = "Active"
@@ -84,7 +90,7 @@ class Companylist extends Component {
                             response.data[i].status = "In-Active"
                     })
                     this.setState({
-                        companylist : this.state.companylist.concat(response.data)
+                        unitlist : this.state.unitlist.concat(response.data)
                     })
                 }
             })
@@ -110,24 +116,24 @@ class Companylist extends Component {
         }
         return formIsValid;
     }
-    addCompany = (e) => {
+    addUnit = (e) => {
         if(this.handleValidationAddCompany()){
             var addStatus = 0; 
-            if($("#addCompAddressStatus1").is(':checked'))    addStatus =1;
+            if($("#addUnitStatus1").is(':checked'))    addStatus =1;
              
             const paramdata ={
-                compName:$("#addCompName").val(),
-                compAdd:$("#addCompAddress").val(),
-                compstatus:addStatus,
+                unitName:$("#addUnitName").val(),
+                unitCompany:$("#addUnitCompany").val(),
+                unitStatus:addStatus,
                 logId:cookie.load('uid')
             }
             e.preventDefault();
            
             axios.defaults.withCredentials = true;
-            axios.post('http://localhost:5001/addCompany',paramdata)
+            axios.post('http://localhost:5001/addUnit',paramdata)
             .then(response => {
                 if(response.status === 200){
-                    this.setState({companylist: []});
+                    this.setState({unitlist: []});
                     response.data.map((val, i) => {     
                         if(val.status)
                             response.data[i].status = "Active"
@@ -135,7 +141,7 @@ class Companylist extends Component {
                             response.data[i].status = "In-Active"
                     })
                     this.setState({
-                        companylist : this.state.companylist.concat(response.data)
+                        unitlist : this.state.unitlist.concat(response.data)
                     })
                     $(".popup-overlay").click();
                 }
@@ -154,37 +160,45 @@ class Companylist extends Component {
         if(!cookie.load('cookie')){
             return redirectVar = <Redirect to= "/" />
         }
+        let companylistDropDown = this.state.companylist.map((companylist) => {
+            return(
+              <option value={companylist.compID}>{companylist.comp_name}</option>
+            )
+        })
        
-        let details = this.state.companylist.map((companylist) => {
+        let details = this.state.unitlist.map((unitlist) => {
             return(
                 <tr>
-                    <td style={{outline: "thin solid"}}>{companylist.compID}</td>
-                    <td style={{outline: "thin solid"}} key={companylist.compID}>{companylist.comp_name}</td>
-                    <td style={{outline: "thin solid"}}>{companylist.address}</td>
-                    <td style={{outline: "thin solid"}}>{companylist.status}</td>
-                    <td style={{outline: "thin solid"}}>{companylist.updatedOn}</td>
-                    <td style={{outline: "thin solid"}}>{companylist.CreatedUser}</td>
+                    <td style={{outline: "thin solid"}}>{unitlist.coID}</td>
+                    <td style={{outline: "thin solid"}} key={unitlist.compName}>{unitlist.compName}</td>
+                    <td style={{outline: "thin solid"}}>{unitlist.compAdd}</td>
+                    <td style={{outline: "thin solid"}}>{unitlist.unitno}</td>
+                    <td style={{outline: "thin solid"}}>{unitlist.status}</td>
+                    <td style={{outline: "thin solid"}}>{unitlist.updatedOn}</td>
+                    <td style={{outline: "thin solid"}}>{unitlist.CreatedUser}</td>
                     <td style={{outline: "thin solid"}}>
                         <Popup trigger={<button style={{margin: "2px"}} className="button btn btn-warning"> Edit </button>}  modal  closeOnDocumentClick >
                             <span> 
-                                <h3 align="center" style={{color: "grey"}}>{companylist.comp_name}</h3>
+                                <h3 align="center" style={{color: "grey"}}>{unitlist.comp_name}</h3>
                                 <br/>
                                 <div className="vendor-edit-form">
-                                    <input type="hidden" className="hidden" id={'editCompId-'+companylist.compID} value={companylist.compID} />
+                                    <input type="hidden" className="hidden" id={'editUnitId-'+unitlist.coID} value={unitlist.coID} />
                                     <div className="form-group">
-                                        <label>Company Name</label>
-                                        <input id={'editCompName-'+companylist.compID} type="text" className="form-control" defaultValue={companylist.comp_name}></input>
+                                        <label>Unit Number</label>
+                                        <input id={'editUnitNumber-'+unitlist.coID} type="text" className="form-control" defaultValue={unitlist.unitno}></input>
                                     </div>
                                     <div className="form-group">
-                                        <label>Company Address</label>
-                                        <input id={'editCompAdd-'+companylist.compID} type="text" className="form-control" defaultValue={companylist.address} ></input>
+                                        <label>Unit Company</label>
+                                        <select defaultValue={unitlist.companyId} id={'editUnitCompany-'+unitlist.coID} className="form-control" >
+                                            {companylistDropDown} 
+                                        </select>
                                     </div>
                                     <div className="form-group">
-                                        <label>Vendor Status</label><br/>
-                                        <input type="radio" value="Active" id={'editCompStatus1-'+companylist.compID} name={'editCompStatus-'+companylist.compID} defaultChecked={companylist.status ==="Active"} /> Active
-                                        <input type="radio" value="In-Active" id={'editVendorStatus0-'+companylist.compID} name={'editCompStatus-'+companylist.compID} defaultChecked={companylist.status ==="In-Active"}/> In-Active
+                                        <label>Unit Status</label><br/>
+                                        <input type="radio" value="Active" id={'editUnitStatus1-'+unitlist.coID} name={'editUnitStatus-'+unitlist.coID} defaultChecked={unitlist.status ==="Active"} /> Active
+                                        <input type="radio" value="In-Active" id={'editUnitStatus0-'+unitlist.coID} name={'editUnitStatus-'+unitlist.coID} defaultChecked={unitlist.status ==="In-Active"}/> In-Active
                                     </div>
-                                    <button onClick={(e) => this.updateCompany(e, companylist.compID)} type="submit" className="btn btn-lg btn-success" style={{position: 'relative'}}>Update</button> 
+                                    <button onClick={(e) => this.updateUnit(e, unitlist.coID)} type="submit" className="btn btn-lg btn-success" style={{position: 'relative'}}>Update</button> 
                                 </div>
                              </span>
                         </Popup>
@@ -198,29 +212,32 @@ class Companylist extends Component {
             <div>
                 <Navbarheader />
                 <div className="container">
-                    <h3 align="center">Company List</h3>
+                    <h3 align="center">Unit List</h3>
                     <ul className="nav nav-pills">
                     <h4>
-                        <Popup trigger={<button style={{margin: "2px"}} className="button btn btn-primary">Add New Company</button>}  modal  closeOnDocumentClick >
+                        <Popup trigger={<button style={{margin: "2px"}} className="button btn btn-primary">Add New Unit</button>}  modal  closeOnDocumentClick >
                             <span> 
-                                <h2 align="center">Add New Company<h3 style={{color: "grey"}}></h3></h2>
+                                <h2 align="center">Add New Unit<h3 style={{color: "grey"}}></h3></h2>
                                 <br/>
                                 <div className="company-add-form">
                                     <div className="form-group">
-                                        <label>Company Name</label>
-                                        <input id="addCompName" type="text" className="form-control" name="addCompName" defaultValue=""></input>
+                                        <label>Unit Number</label>
+                                        <input id="addUnitName" type="text" className="form-control" name="addUnitName" defaultValue=""></input>
                                     </div>
                                     <div className="form-group">
-                                        <label>Company Address</label>
-                                        <input id="addCompAddress" type="text" className="form-control" name="addCompAddress" defaultValue="" ></input>
+                                        <label>Unit Company</label>
+                                        <select id="addUnitCompany" className="form-control" >
+                                            <option value="0">--Select--</option>
+                                            {companylistDropDown} 
+                                        </select>
                                     </div>
                                     <div className="form-group">
-                                        <label>Company Status</label>
+                                        <label>Unit Status</label>
                                         <br/>
-                                        <input type="radio" value="Active" id="addCompAddressStatus1" name="addCompAddressStatus" defaultChecked="1" /> Active
-                                        <input type="radio" value="In-Active" id="addCompAddressStatus0" name="addCompAddressStatus" /> In-Active
+                                        <input type="radio" value="Active" id="addUnitStatus1" name="addUnitStatus" defaultChecked="1" /> Active
+                                        <input type="radio" value="In-Active" id="addUnitStatus0" name="addUnitStatus" /> In-Active
                                     </div>
-                                    <button onClick={(e) => this.addCompany(e)} type="submit" className="btn btn-lg btn-success" style={{position: 'relative'}}>Update</button> 
+                                    <button onClick={(e) => this.addUnit(e)} type="submit" className="btn btn-lg btn-success" style={{position: 'relative'}}>Update</button> 
                                 </div>
                              </span>
                         </Popup>
@@ -234,13 +251,14 @@ class Companylist extends Component {
                     <table className="table" style={{outline: "thin solid"}} border="1px solid black">
                         <thead>
                             <tr style={{outline: "thin solid"}}>
-                                <th bgcolor="grey">Company Id</th>
+                                <th bgcolor="grey">Unit</th>
                                 <th bgcolor="grey">Company Name</th>
                                 <th bgcolor="grey">Company Address</th>
-                                <th bgcolor="grey">Company Status</th>
-                                <th bgcolor="grey">Company last Update Time</th>
-                                <th bgcolor="grey">Company Updated By</th>
-                                <th bgcolor="grey">Company Update</th>
+                                <th bgcolor="grey">Unit Number</th>
+                                <th bgcolor="grey">Unit Status</th>
+                                <th bgcolor="grey">Unit last Update Time</th>
+                                <th bgcolor="grey">Unit Updated By</th>
+                                <th bgcolor="grey">Unit Update</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -252,4 +270,4 @@ class Companylist extends Component {
         )
     }
 }
-export default Companylist;
+export default Unitlist;

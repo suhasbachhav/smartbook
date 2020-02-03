@@ -58,10 +58,10 @@ app.post('/login',function(req,res){
 
                 } else {
                     req.session.SessUser = req.body.username;
-                    res.cookie('cookie',"admin",{maxAge: 1800000, httpOnly: false, path : '/'});
-                    res.cookie('userfullname',rows[0].name,{maxAge: 1800000, httpOnly: false, path : '/'});
-                    res.cookie('userName',req.body.username,{maxAge: 1800000, httpOnly: false, path : '/'});
-                    res.cookie('uid',rows[0].id,{maxAge: 1800000, httpOnly: false, path : '/'});
+                    res.cookie('cookie',"admin",{maxAge: 7200000, httpOnly: false, path : '/'});
+                    res.cookie('userfullname',rows[0].name,{maxAge: 7200000, httpOnly: false, path : '/'});
+                    res.cookie('userName',req.body.username,{maxAge: 7200000, httpOnly: false, path : '/'});
+                    res.cookie('uid',rows[0].id,{maxAge: 7200000, httpOnly: false, path : '/'});
                     res.writeHead(200,{
                         'Content-Type' : 'text/plain'
                     })
@@ -182,6 +182,52 @@ app.post('/editCompany', function(req,res){
     }
   })
 })
+app.post('/editUnit', function(req,res){
+    var d = new Date();
+    var currDateTime = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+    var sqlQuery = 'UPDATE `unit` SET `companyId` = ? , `unitno` = ? ,  `status` = ? ,  `createdBy` = ? , `updatedOn` = ?  WHERE `unit`.`coID` = ?';
+    pool.query(sqlQuery,[req.body.unitCompany, req.body.unitNumber, req.body.unitStatus, req.body.logId, currDateTime,  req.body.unitId] , (err, result) => {
+    if (err){
+      res.status(400).send("Error in Connection");
+    }else {
+        pool.query('SELECT unit.*,company.comp_name AS compName, company.address AS compAdd, users.name AS CreatedUser FROM unit JOIN users ON users.id=unit.createdBy JOIN company ON company.compID=unit.companyId', (err, resultNew) => {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(resultNew));
+        })
+    }
+  })
+})
+app.post('/addUnit', function(req,res){
+    var d = new Date();
+    var currDateTime = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+    var sqlQuery = 'INSERT INTO unit (companyId , unitno , status , createdBy , updatedOn) VALUES (?,?,?,?,?)';
+    pool.query(sqlQuery,[req.body.unitCompany, req.body.unitName, req.body.unitStatus , req.body.logId ,currDateTime ] , (err, result) => {
+    if (err){
+      res.status(400).send("Error in Connection");
+    }else {
+        pool.query('SELECT unit.*,company.comp_name AS compName, company.address AS compAdd, users.name AS CreatedUser FROM unit JOIN users ON users.id=unit.createdBy JOIN company ON company.compID=unit.companyId', (err, resultNew) => {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(resultNew));
+        })
+    }
+  })
+})
+app.get('/unitlist', function(req,res){
+    pool.query('SELECT unit.*,company.comp_name AS compName, company.address AS compAdd, users.name AS CreatedUser FROM unit JOIN users ON users.id=unit.createdBy JOIN company ON company.compID=unit.companyId', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
 
 app.get('/vendorlist', function(req,res){
     pool.query('SELECT vendor.*,users.name AS CreatedUser FROM vendor JOIN users ON users.id=vendor.createdBy', (err, result) => {
@@ -197,6 +243,92 @@ app.get('/vendorlist', function(req,res){
 })
 app.get('/companylist', function(req,res){
     pool.query('SELECT company.*,users.name AS CreatedUser FROM company JOIN users ON users.id=company.createdBy', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+app.get('/activeCompanyList', function(req,res){
+    pool.query('SELECT compID, comp_name , address FROM company WHERE status=1', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+app.get('/showUnitForCompany', function(req,res){
+    pool.query('SELECT coID,unitno FROM unit WHERE status=1 AND companyId=?',[req.query.CompanyId], (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+app.get('/getGSTNumber', function(req,res){
+    pool.query('SELECT GSTIN FROM vendor WHERE vid=?',[req.query.vendorId], (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+
+app.get('/monthlist', function(req,res){
+    pool.query('SELECT mid, monthName FROM month', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+app.get('/paidStatuslist', function(req,res){
+    pool.query('SELECT id, pName FROM paidstatus', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+app.get('/expenseslist', function(req,res){
+    pool.query('SELECT * FROM expenses', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+
+app.get('/activeVendorList', function(req,res){
+    pool.query('SELECT vid, vendorName FROM vendor WHERE vendorstatus=1', (err, result) => {
         if (err){
           res.status(400).send("Error in Connection");
         }else {

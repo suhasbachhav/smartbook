@@ -228,8 +228,8 @@ class Vendorlist extends Component {
                                     <div className="form-group">
                                         <label>Vendor Status</label>
                                         <br/>
-                                        <input type="radio" value="Active" id="addVendorStatus1" className="addVendorStatus" name="addVendorStatus1" defaultChecked="1" /> Active
-                                        <input type="radio" value="In-Active" id="addVendorStatus0" className="addVendorStatus"  name="addVendorStatus0" /> In-Active
+                                        <input type="radio" value="Active" id="addVendorStatus1" name="addVendorStatus" defaultChecked="1" /> Active
+                                        <input type="radio" value="In-Active" id="addVendorStatus0" name="addVendorStatus" /> In-Active
                                     </div>
                                     <button onClick={(e) => this.addVendor(e)} type="submit" className="btn btn-lg btn-success" style={{position: 'relative'}}>Update</button> 
                                 </div>
