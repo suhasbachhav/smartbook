@@ -39,6 +39,7 @@ class Navbarheader extends Component{
                         <NavDropdown.Item href="/userlist">User Managment</NavDropdown.Item>
                         <NavDropdown.Item href="/companylist">Company Managment</NavDropdown.Item>
                         <NavDropdown.Item href="/Unitlist">Unit Managment</NavDropdown.Item>
+                        <NavDropdown.Item href="/Expenselist">Expenses Managment</NavDropdown.Item>
                       </NavDropdown>
                       <NavDropdown title="Billing Section" id="basic-nav-dropdown">
                         <NavDropdown.Item href="/BillingForm">Billing form</NavDropdown.Item>

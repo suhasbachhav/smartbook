@@ -162,7 +162,7 @@ class Unitlist extends Component {
         }
         let companylistDropDown = this.state.companylist.map((companylist) => {
             return(
-              <option value={companylist.compID}>{companylist.comp_name}</option>
+                <option value={companylist.compID}>{companylist.comp_name}</option>
             )
         })
        

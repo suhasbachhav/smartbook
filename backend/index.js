@@ -228,7 +228,75 @@ app.get('/unitlist', function(req,res){
         }
     })
 })
-
+app.get('/expenselist', function(req,res){
+    pool.query('SELECT expenses.*, users.name AS CreatedUser FROM expenses JOIN users ON users.id=expenses.createdBy', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+app.get('/paymentlist', function(req,res){
+    pool.query('SELECT * FROM paymenttype', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+app.get('/activeExpenselist', function(req,res){
+    pool.query('SELECT * FROM expenses WHERE status=1', (err, result) => {
+        if (err){
+          res.status(400).send("Error in Connection");
+        }else {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(result));
+        }
+    })
+})
+app.post('/editExpense', function(req,res){
+    var d = new Date();
+    var sqlQuery = 'UPDATE `expenses` SET `expName` = ? , `createdBy` = ? ,  `status` = ?  WHERE `expenses`.`expId` = ?';
+    pool.query(sqlQuery,[req.body.expenseName, req.body.logId, req.body.expenseStatus, req.body.expenseId] , (err, result) => {
+    if (err){
+      res.status(400).send("Error in Connection");
+    }else {
+        pool.query('SELECT expenses.*, users.name AS CreatedUser FROM expenses JOIN users ON users.id=expenses.createdBy', (err, resultNew) => {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(resultNew));
+        })
+    }
+  })
+})
+app.post('/addExpense', function(req,res){
+    var d = new Date();
+    //var currDateTime = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+    var sqlQuery = 'INSERT INTO expenses (expName , status , createdBy) VALUES (?,?,?)';
+    pool.query(sqlQuery,[req.body.expenseName, req.body.expenseStatus , req.body.logId ] , (err, result) => {
+    if (err){
+      res.status(400).send("Error in Connection");
+    }else {
+        pool.query('SELECT expenses.*, users.name AS CreatedUser FROM expenses JOIN users ON users.id=expenses.createdBy', (err, resultNew) => {
+            res.writeHead(200,{
+                'Content-Type' : 'text/plain'
+            })
+            res.end(JSON.stringify(resultNew));
+        })
+    }
+  })
+})
 app.get('/vendorlist', function(req,res){
     pool.query('SELECT vendor.*,users.name AS CreatedUser FROM vendor JOIN users ON users.id=vendor.createdBy', (err, result) => {
         if (err){

@@ -8,6 +8,7 @@ import Popup from "reactjs-popup";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+
 class BillingForm extends Component {
     constructor(){
         super();
@@ -18,6 +19,7 @@ class BillingForm extends Component {
             monthlist:[],
             paidStatuslist:[],
             expenseslist:[],
+            paymentTypelist:[],
             billReceiveDate: new Date(),
             chequeDate: new Date(),
             billingDate: new Date(),
@@ -29,6 +31,11 @@ class BillingForm extends Component {
         this.addBill = this.addBill.bind(this);
         this.clearBill = this.clearBill.bind(this);
         this.getGSTNumber = this.getGSTNumber.bind(this);
+        this.addExpense = this.addExpense.bind(this);
+        this.calculateBillAmount = this.calculateBillAmount.bind(this);
+        this.calculateTDSAmount = this.calculateTDSAmount.bind(this);
+        this.calculateFinalAmount = this.calculateFinalAmount.bind(this);
+        this.paymentDropDownOption = this.paymentDropDownOption.bind(this);
     }
     componentDidMount(){
         axios.get('http://localhost:5001/activeCompanyList')
@@ -55,10 +62,16 @@ class BillingForm extends Component {
                 paidStatuslist : this.state.paidStatuslist.concat(response.data) 
             })
         })
-        axios.get('http://localhost:5001/expenseslist')
+        axios.get('http://localhost:5001/activeExpenselist')
             .then((response) => {
             this.setState({
                 expenseslist : this.state.expenseslist.concat(response.data) 
+            })
+        })
+        axios.get('http://localhost:5001/paymentlist')
+            .then((response) => {
+            this.setState({
+                paymentTypelist : this.state.paymentTypelist.concat(response.data) 
             })
         })
     }
@@ -96,13 +109,58 @@ class BillingForm extends Component {
             console.log(error);
         })
     }
+    calculateBillAmount = (e) => {
+        e.preventDefault();
+        let gstVal = parseFloat($("#bGST").val());
+        let basicAmountVal = $("#bBasicAmount").val();
+        var calcPrice = parseFloat(basicAmountVal) + ((gstVal * basicAmountVal) / 100);
+        var calcPrice  = parseFloat(calcPrice);
+        var calcPrice = calcPrice.toFixed(2); 
+        $("#bBillAmount").val(calcPrice);
+    }
+    calculateTDSAmount = (e) => {
+        e.preventDefault();
+        let tdsVal = parseFloat($("#bTDSPercent").val());
+        let basicAmountVal = parseFloat($("#bBasicAmount").val());
+        var calcPrice = (tdsVal * basicAmountVal) / 100;
+        var calcPrice = calcPrice.toFixed(2); 
+        $("#bTDSAmount").val(calcPrice);
+        var billAmount = parseFloat($("#bBillAmount").val());
+        var tdsAmount = parseFloat($("#bTDSAmount").val());
+        var totalAmount =  billAmount - tdsAmount;
+        $("#bTotalAmount").val(totalAmount);
+    }
+    
+    calculateFinalAmount = (e) => {
+        e.preventDefault();
+        var totalAmount = parseFloat($("#bTotalAmount").val());
+        var debitAmount = parseFloat($("#bDebitNote").val());
+        $("#bFinalAmount").val(totalAmount);
+    }
     addBill = (e) => {
         e.preventDefault();
     }
+
+    paymentDropDownOption = (e) => {
+        e.preventDefault();
+        if($("#bPaymentType").val() == 2){
+            $("#bPaidRefType").html("Cheque Amount:");
+            $("#bPaidReferance").html("Cheque Number:");
+            $("#bPaymentDate").html("Cheque Date:");
+        } else {
+            var dropDownText = $("#bPaymentType option:selected").text();
+            $("#bPaidRefType").html(dropDownText+" Amount:");
+            $("#bPaidReferance").html(dropDownText+" Referance Number:");
+            $("#bPaymentDate").html(dropDownText+" Payment Date:");
+        }
+    }
+
     clearBill = (e) => {
         e.preventDefault();
-        $("#bCompanyId , #bVendorId , #bMonthId , #bPaidStatus , #bUnitId").val(0);
-        $("#bNumber, #bBasicAmount, #bGST, #bExpenseHead, #bBillAmount, #bTDSPercent, #bTDSAmount, #bDebitNote, #bFinalAmount , #bTotalAmount ").val('');
+        $("#bCompanyId , #bVendorId , #bMonthId , #bPaidStatus , #bUnitId , #bYearId ").val(0);
+        $("#bPaymentType ").val(2);
+        
+        $("#bNumber, #bBasicAmount, #bGST, #bExpenseHead, #bBillAmount, #bTDSPercent, #bTDSAmount, #bDebitNote, #bFinalAmount , #bTotalAmount, #bPaidAmount , #bPaidReferanceNumber ").val('');
     }
     handleBillReceiveChange = date => {
         this.setState({
@@ -129,6 +187,59 @@ class BillingForm extends Component {
             billingPeriodToDate: date
         });
     };
+    handleValidationAddExpense(){
+        let redirectVar = null;
+         if(!cookie.load('cookie')){
+            return redirectVar = <Redirect to= "/" />
+        }
+        let formIsValid = true;
+        if($("#addCompName").val() ==''){
+           formIsValid = false;
+           alert("Company name Required");
+        }
+        if($("#addCompAddress") ==''){
+           formIsValid = false;
+           alert("Company address Required");
+        }
+        return formIsValid;
+    }
+    addExpense = (e) => {
+        if(this.handleValidationAddExpense()){
+            var addStatus = 0; 
+            if($("#addExpenseStatus1").is(':checked'))    addStatus =1;
+             
+            const paramdata ={
+                expenseName:$("#addExpenseName").val(),
+                expenseStatus:addStatus,
+                logId:cookie.load('uid')
+            }
+            e.preventDefault();
+           
+            axios.defaults.withCredentials = true;
+            axios.post('http://localhost:5001/addExpense',paramdata)
+            .then(response => {
+                if(response.status === 200){
+                    this.setState({expenseslist: []});
+                    response.data.map((val, i) => {     
+                        if(val.status)
+                            response.data[i].status = "Active"
+                        else
+                            response.data[i].status = "In-Active"
+                    })
+                    this.setState({
+                        expenseslist : this.state.expenseslist.concat(response.data)
+                    })
+                    $(".popup-overlay").click();
+                }
+            })
+            .catch(error => {
+                console.log("In error");
+                console.log(error);
+                alert("Deleting User Unsuccessful :(");
+            })
+        }
+    }
+  
         
    
 
@@ -168,6 +279,17 @@ class BillingForm extends Component {
               <option value={expenseslist.expId}>{expenseslist.expName}</option>
             )
         })
+        let paymentTypelistDropDown = this.state.paymentTypelist.map((paymentTypelist) => {
+            if(paymentTypelist.pId == 2){
+                return(
+                    <option value={paymentTypelist.pId} selected>{paymentTypelist.paymentName}</option>
+                )
+            }else{
+                return(
+                    <option value={paymentTypelist.pId}>{paymentTypelist.paymentName}</option>
+                )
+            }
+        })
 
         return(
             <div>
@@ -199,6 +321,25 @@ class BillingForm extends Component {
                                         <option value='0'>----Select Expenses----</option>
                                         {expenseslistDropDown} 
                                     </select>
+                                    <Popup trigger={<button style={{margin: "2px",float: "right"}} className="button btn btn-primary">Add New+</button>}  modal  closeOnDocumentClick >
+                                        <span> 
+                                            <h2 align="center">Add New Expense<h3 style={{color: "grey"}}></h3></h2>
+                                            <br/>
+                                            <div className="company-add-form">
+                                                <div className="form-group">
+                                                    <label>Expense Name</label>
+                                                    <input id="addExpenseName" type="text" className="form-control" name="addExpenseName" defaultValue=""></input>
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Expense Status</label>
+                                                    <br/>
+                                                    <input type="radio" value="Active" id="addExpenseStatus1" name="addExpenseStatus" defaultChecked="1" /> Active
+                                                    <input type="radio" value="In-Active" id="addExpenseStatus0" name="addExpenseStatus" /> In-Active
+                                                </div>
+                                                <button onClick={(e) => this.addExpense(e)} type="submit" className="btn btn-lg btn-success" style={{position: 'relative'}}>Add</button> 
+                                            </div>
+                                        </span>
+                                    </Popup>
                                 </div>
                                 <div className="form-group">
                                     <label >Bill receives Date:</label><br/>
@@ -251,17 +392,15 @@ class BillingForm extends Component {
                                         <option value='2030'>2030</option>
                                     </select>
                                 </div>
-                                
-                                
-                            </div>
-                            <div className="col-xs-12 col-sm-12 col-md-6 col-lg-6">
                                 <div className="form-group">
                                     <label>Basic Amount:</label>
                                     <input id="bBasicAmount" type="number" className="form-control" defaultValue="" />
                                 </div>
+                            </div>
+                            <div className="col-xs-12 col-sm-12 col-md-6 col-lg-6">
                                 <div className="form-group">
                                     <label>GST/TAX:</label>
-                                    <input id="bGST" type="number" className="form-control" defaultValue="" />
+                                    <input id="bGST" type="number" onChange={(e) => this.calculateBillAmount(e)}  className="form-control" defaultValue="" />
                                 </div>
                                 <div className="form-group">
                                     <label>Bill Amount:</label>
@@ -269,7 +408,7 @@ class BillingForm extends Component {
                                 </div>
                                 <div className="form-group">
                                     <label>TDS %:</label>
-                                    <input id="bTDSPercent" type="number" className="form-control" defaultValue="" />
+                                    <input id="bTDSPercent" type="number" onChange={(e) => this.calculateTDSAmount(e)} className="form-control" defaultValue="" />
                                 </div>
                                 <div className="form-group">
                                     <label>TDS Amount:</label>
@@ -281,26 +420,33 @@ class BillingForm extends Component {
                                 </div>
                                 <div className="form-group">
                                     <label>Debit Note:</label>
-                                    <input id="bDebitNote" type="number" className="form-control" defaultValue="" />
+                                    <input id="bDebitNote" type="number" onChange={(e) => this.calculateFinalAmount(e)} className="form-control" defaultValue="" />
                                 </div>
                                 <div className="form-group">
                                     <label>Final Amount:</label>
                                     <input id="bFinalAmount" type="number" className="form-control" defaultValue="" />
                                 </div>
                                 <div className="form-group">
-                                    <label>Cheque Amount:</label>
-                                    <input id="bChequeAmount" type="number" className="form-control" defaultValue="" />
+                                    <label>Peyment Type:</label>
+                                    <select defaultValue='2' id="bPaymentType" onChange={(e) => this.paymentDropDownOption(e)}  className="form-control">
+                                        {paymentTypelistDropDown}
+                                    </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Cheque Number:</label>
-                                    <input id="bChequeNumber" type="number" className="form-control" defaultValue="" />
+                                    <label id="bPaidRefType">Cheque Amount:</label>
+                                    <input id="bPaidAmount" type="number" className="form-control" defaultValue="" />
                                 </div>
                                 <div className="form-group">
-                                    <label>Cheque Date:</label><br/>
+                                    <label id="bPaidReferance">Cheque Number:</label>
+                                    <input id="bPaidReferanceNumber" type="number" className="form-control" defaultValue="" />
+                                </div>
+                                <div className="form-group">
+                                    <label id="bPaymentDate" >Cheque Date:</label><br/>
                                     <DatePicker id="bChequeDate" selected={this.state.billReceiveDate} className="form-control" onChange={this.handleChequeChange} />
                                 </div>
+                                
                                 <div className="form-group">
-                                    <label>Billing Month:</label>
+                                    <label>Peyment Status:</label>
                                     <select  defaultValue='0' id="bPaidStatus" className="form-control">
                                         <option value='0'>----Select Paid Status----</option>
                                         {paidStatuslistDropDown} 

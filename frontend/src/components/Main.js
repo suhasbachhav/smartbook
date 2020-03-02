@@ -7,6 +7,7 @@ import Dashboard from './Dashboard';
 import Companylist from './Companylist';
 import Unitlist from './Unitlist';
 import BillingForm from './BillingForm';
+import Expenselist from './Expenselist';
 
 //Create a Main Component
 class Main extends Component {
@@ -21,6 +22,7 @@ class Main extends Component {
                 <Route path="/Companylist" component={Companylist}/>
                 <Route path="/Unitlist" component={Unitlist}/>
                 <Route path="/BillingForm" component={BillingForm}/>
+                <Route path="/Expenselist" component={Expenselist}/>
             </div>
         )
     }
